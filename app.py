@@ -7,7 +7,6 @@ from urllib.parse import quote
 
 import easygui
 
-
 def get_data(endpoint, query, headers):
     conn = http.client.HTTPSConnection("idealista2.p.rapidapi.com")
     conn.request("GET", f"{endpoint}{query}", headers=headers)
@@ -20,7 +19,7 @@ def normalize_text(text):
     return unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8').lower()
 
 headers = {
-    'x-rapidapi-key': "",
+    'x-rapidapi-key': "dc63fbdbeamshc8ad9c30ef2b375p12ee33jsnd4a9b1aa3a01",
     'x-rapidapi-host': "idealista2.p.rapidapi.com"
 }
 
@@ -181,3 +180,13 @@ if rresults:
     easygui.msgbox(f"Results saved to {output_file}", "Success")
 else:
     easygui.msgbox("No properties found with the specified criteria.", "No Properties")
+
+
+
+
+@app.route("/")
+def homepage():
+    return render_template("index.html")
+
+if __name__ == "__main__":
+    app.run()
