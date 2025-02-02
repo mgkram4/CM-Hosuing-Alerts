@@ -222,8 +222,7 @@ def check_new_listings():
 
 @app.route("/")
 def homepage():
-    
-    
+
     return render_template("index.html")
 
 @app.route("/get-house", method="POST")
@@ -235,7 +234,9 @@ def get_house():
     # retrun jsonify(post_data)
     pass
 
-
+@app.route( "/results" , method="POST" )
+def show_results():
+    pass
 
 @app.route("/api/properties")
 def get_properties():

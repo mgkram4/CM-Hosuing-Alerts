@@ -1,0 +1,70 @@
+.header {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-color: lime;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.first-input{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-color: lime;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.result-data {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-color: red;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+
+.regressive-data{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-color: lime;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.floor-data {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-color: lime;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.elavator {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-color: lime;
+    border-radius: 20px;
+    margin: 20px;
+}
+
+.btn {
+    background-color: red;
+    flex: content;
+    justify-content: center;
+    padding: 4px;
+    margin: 8px;
+    border-radius: 20px;
+
+}
+
+input {
+    padding: 4px;
+    margin: 8px;
+    border-radius: 20px;
+}
