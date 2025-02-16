@@ -21,63 +21,79 @@
         
         <div class="body">
 
-            <form  class="first-input" method="POST">
+            <form class="first-input" method="POST" action="/">
+                <div class="city-input">
+                    <h3>Enter the city you want to rent in:</h3>
+                    <input name="city" required value="{{ city if city }}">
+                </div>
+                
+                <div class="district-input">
+                    <h3>Enter the Districts you want to rent in </h3>
+                    <p>One per line</p>
+                    <div class="each-district-input">
+                        <textarea name="districts" required>{{ district if district }}</textarea>
+                    </div>
+                    <button type="submit" name="get-city" value="1" class="btn">Get City</button>
+                </div>
+            </form>
 
-            <div class="city-input">
-                <h3>Enter the city you wnat to rent in:</h3>
-                <input></input>
-
-
+            {% if show_results %}
+            <div class="result-data">
+                <h1>Automatically Selected locations for district/metro: {{ city }}, {{ district }}</h1>
+                <h3>{{ description }}</h3>
+                <h3>Zoi ID: {{ ZOI }}</h3>
+                <h3>Location ID: {{ ID }}</h3>
             </div>
-            <div class="district-input">
-                <h3>Enter the Districts you want to rent in </h3>
-                <p>One per line</p>
-                <div class="each-district-input">
-                <input></input> 
-  
-                <button class="add-each-district-input">+</button><button class="remove-each-district-input">-</button>
 
+            <form class="second-city-input" method="POST" action="{{ url_for('result_page') }}">
+                <input type="hidden" name="city" value="{{ city }}">
+                <input type="hidden" name="districts" value="{{ district }}">
+                
+                <div class="regressive-data">
+                    <h3>Enter the maximum price (leave blank for no max)</h3>
+                    <input name="max_price" type="number">
+                    <h3>Enter the minimum price (leave blank for no max)</h3>
+                    <input name="min_price" type="number">
+                    <h3>Enter the minimum number of rooms (leave blank for no max)</h3>
+                    <input name="min_rooms" type="number">
                 </div>
 
-                <button id="get-city" class="btn"> Get City </button>
+                <div class="floor-data">
+                    <h3>Floor Types</h3>
+                    <h5>Select the floor types you would consider:</h5>
+                    <input type="checkbox" name="floor_types" value="topFloor"> Top Floor<br>
+                    <input type="checkbox" name="floor_types" value="intermediateFloor"> Intermediate Floor<br>
+                    <input type="checkbox" name="floor_types" value="groundFloor"> Ground Floor<br>
+                </div>
+
+                <div class="elevator">
+                    <p>Do you need an elevator?</p>
+                    <select name="elevator">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+
+                <button type="submit" name="submit-preferences" value="1" class="btn">Submit</button>
             </form>
+            {% endif %}
+
+            {% if results %}
+            <div class="property-results">
+                <h2>Found Properties:</h2>
+                {% for property in results %}
+                <div class="property-card">
+                    <h3>{{ property.address }}</h3>
+                    <p>Price: {{ property.price }}</p>
+                    <p>Rooms: {{ property.rooms }}</p>
+                    <p>Size: {{ property.size }}</p>
+                    <p>District: {{ property.district }}</p>
+                    <a href="{{ property.url }}" target="_blank">View Property</a>
+                </div>
+                {% endfor %}
             </div>
-
-            <div class= "result-data">
-                <h1>Automatically Selected locations for district/metro : $city , $district</h1>
-                <h3> $desciption </h3>
-                <h3>Zoi ID: $ZOI</h3>
-                <h3>Location ID: $ID</h3>
-            </div>
-
-            <form class="secound-city-input">
-            <div class="regressive-data">
-                <h3>Enter the maximum price (leave blank for no max)</h3>
-                <input></input>
-                <h3>Enter the minimum price (leave blank for no max)</h3>
-                <input></input>
-                <h3>Enter the minimum number of rooms (leave blank for no max)</h3>
-                <input></input>
-            </div>
-
-
-            <div class ="floor-data">
-                <h3> Floor Types </h3>
-                <h5>Slect the floor types you would consider:  </h5>
-              <p> Top Floor </p> <input > yes/no</input> 
-              <p> Intermediate Floor </p> <input > yes/no</input> 
-              <p> Ground Floor </p> <input >yes/no </input> 
-
-            </div>
-
-            <div class="elavator">
-
-                <p>Do you need an elavator</p>
-                <input > yes/no</input> 
-
-            <button id= "get-city" class="btn" src="/learn.htm">Submit</button>
-        </form>
-    </div>
+            {% endif %}
+        </div>
 
 
     </body>

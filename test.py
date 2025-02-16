@@ -34,7 +34,7 @@ headers = {
 
 def data_retrevial():
     country = "es"
-    city = normalize_text()
+    city = input()
     city = normalize_text(city)
 
     districts = input()
@@ -43,39 +43,39 @@ def data_retrevial():
     if not districts_list:
         print("null")
 
-    district_results = {}
-    for district in districts_list:
-        query_district = quote(district)
-        auto_complete_data = get_data("/auto-complete", f"?prefix={query_district}&country={country}", headers)
+district_results = {}
+for district in districts_list:
+    query_district = quote(district)
+    auto_complete_data = get_data("/auto-complete", f"?prefix={query_district}&country={country}", headers)
 
-        if not auto_complete_data.get('locations'):
+    if not auto_complete_data.get('locations'):
             continue
 
-        matching_locations = [
-            item for item in auto_complete_data['locations']
-            if normalize_text(item.get("name", "")).find(district) != -1 and
-            normalize_text(item.get("name", "")).find(city) != -1
-        ]
+    matching_locations = [
+        item for item in auto_complete_data['locations']
+        if normalize_text(item.get("name", "")).find(district) != -1 and
+        normalize_text(item.get("name", "")).find(city) != -1
+    ]
 
-        if matching_locations:
-            # Separate metro zones and regular districts
-            metro_zones = [loc for loc in matching_locations if "metro" in loc.get("subType", "").lower()]
-            regular_districts = [loc for loc in matching_locations if loc not in metro_zones]
+    if matching_locations:
+        # Separate metro zones and regular districts
+        metro_zones = [loc for loc in matching_locations if "metro" in loc.get("subType", "").lower()]
+        regular_districts = [loc for loc in matching_locations if loc not in metro_zones]
 
-            if metro_zones and regular_districts:
-                choices = input(
-                    f"Both metro zones and regular districts were found for {district}. Select the locations to include in the search:",
-                    "Choose Locations",
-                    choices=[f"Metro{city.capitalize()}: {loc['name']}" for loc in metro_zones] +
-                            [f"District: {loc['name']}" for loc in regular_districts]
+        if metro_zones and regular_districts:
+            choices = input(
+                f"Both metro zones and regular districts were found for {district}. Select the locations to include in the search:",
+                "Choose Locations",
+                choices=[f"Metro{city.capitalize()}: {loc['name']}" for loc in metro_zones] +
+                        [f"District: {loc['name']}" for loc in regular_districts]
                 )
-                if choices:
-                    district_results[district] = []
-                    for choice in choices:
-                        if choice.startswith("Metro:"):
-                            district_results[district].append(metro_zones.pop(0))
-                        elif choice.startswith("District:"):
-                            district_results[district].append(regular_districts.pop(0))
+            if choices:
+                district_results[district] = []
+                for choice in choices:
+                    if choice.startswith("Metro:"):
+                        district_results[district].append(metro_zones.pop(0))
+                    elif choice.startswith("District:"):
+                        district_results[district].append(regular_districts.pop(0))
             else:
                 district_results[district] = metro_zones or regular_districts
                 # Display info box for districts without multiple choices
@@ -190,78 +190,10 @@ def data_retrevial():
 latest_results = []
 previous_results = []
 
-def check_new_listings():
-    """Function to check for new listings and compare with previous results"""
-    global latest_results, previous_results
-    
-    # Get the most recent results file
-    results_dir = Path('.')
-    result_files = list(results_dir.glob('results_*.csv'))
-    if not result_files:
-        return
-    
-    latest_file = max(result_files, key=lambda x: x.stat().st_mtime)
-    
-    # Read the latest results
-    new_results = []
-    with open(latest_file, mode='r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        new_results = list(reader)
-    
-    # Compare with previous results to find new listings
-    new_listings = []
-    if previous_results:
-        existing_urls = {item['url'] for item in previous_results}
-        new_listings = [item for item in new_results if item['url'] not in existing_urls]
-    
-    # Update the global variables
-    previous_results = latest_results
-    latest_results = new_results
-    
-    return new_listings
+get_data()
 
-@app.route("/")
-def homepage():
+data_retrevial()
 
-    return render_template("index.html")
+print(latest_results)
 
-@app.route("/result")
-def result():
-
-    return render_template("result.html")
-
-# @app.route("/get-house", method="POST")
-# def get_house():
-#     data = requests.get("index.html")
-#     # to do get input from html page
-#     # fit data into data retrevial function 
-#     # post_data = data_retrevial(city,rooms,min_price,max_price)
-#     # retrun jsonify(post_data)
-#     pass
-
-# @app.route( "/results" , method="POST" )
-# def show_results():
-#     pass
-
-@app.route("/api/properties")
-def get_properties():
-    """Endpoint to get all current properties"""
-    global latest_results
-    return jsonify(latest_results)
-
-@app.route("/api/new-listings")
-def get_new_listings():
-    """Endpoint to get only new listings since last check"""
-    new_listings = check_new_listings()
-    return jsonify(new_listings if new_listings else [])
-
-def init_scheduler():
-    """Initialize the scheduler for hourly checks"""
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_new_listings, trigger="interval", hours=1)
-    scheduler.start()
-
-if __name__ == "__main__":
-    # Initialize the scheduler before running the app
-    init_scheduler()
-    app.run(debug=True)
+print(previous_results)

@@ -8,11 +8,12 @@ from urllib.parse import quote
 
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 CORS(app)
+app.secret_key = 'b9c10ee9d8d53b0e9d83e3931e4d8b6a'  # Replace with a secure secret key
 
 
 def get_data(endpoint, query, headers):
@@ -32,16 +33,14 @@ headers = {
 }
 
 
-def data_retrevial():
+def data_retrevial(city, districts, max_price=None, min_price=None, min_rooms=None, 
+                   floor_types=None, elevator=None):
     country = "es"
-    city = normalize_text()
     city = normalize_text(city)
-
-    districts = input()
-
     districts_list = [normalize_text(district.strip()) for district in districts.splitlines() if district.strip()]
+    
     if not districts_list:
-        print("null")
+        return {"error": "No districts provided"}
 
     district_results = {}
     for district in districts_list:
@@ -58,66 +57,17 @@ def data_retrevial():
         ]
 
         if matching_locations:
-            # Separate metro zones and regular districts
             metro_zones = [loc for loc in matching_locations if "metro" in loc.get("subType", "").lower()]
             regular_districts = [loc for loc in matching_locations if loc not in metro_zones]
-
-            if metro_zones and regular_districts:
-                choices = input(
-                    f"Both metro zones and regular districts were found for {district}. Select the locations to include in the search:",
-                    "Choose Locations",
-                    choices=[f"Metro{city.capitalize()}: {loc['name']}" for loc in metro_zones] +
-                            [f"District: {loc['name']}" for loc in regular_districts]
-                )
-                if choices:
-                    district_results[district] = []
-                    for choice in choices:
-                        if choice.startswith("Metro:"):
-                            district_results[district].append(metro_zones.pop(0))
-                        elif choice.startswith("District:"):
-                            district_results[district].append(regular_districts.pop(0))
-            else:
-                district_results[district] = metro_zones or regular_districts
-                # Display info box for districts without multiple choices
-                selected_names = [loc['name'] for loc in district_results[district]]
-                print(
-                    f"Automatically selected locations for district/metro{city.capitalize()} '{district.capitalize()}':\n" +
-                    "\n".join(selected_names)+ "\n"+"ZoI ID: "+str(district_results[district][0].get("zoiId"))+"\n"+"Location ID: "+str(district_results[district][0].get("locationId")),
-                    "Selected Locations"
-                )
+            district_results[district] = metro_zones + regular_districts
+            
+            selected_names = [loc['name'] for loc in district_results[district]]
+            print(f"Selected locations for {district.capitalize()}:\n" + "\n".join(selected_names))
         else:
-            print(f"No matches found for district {district.capitalize()}.", "No Match")
+            print(f"No matches found for district {district.capitalize()}")
 
     if not district_results:
-        print("No matching locations found for any district. Exiting.", "No Match")
-
-
-    max_price = input("Enter the maximum price (leave blank for no max):")
-    min_price = input("Enter the minimum price (leave blank for no min):")
-    min_rooms = input("Enter the minimum number of rooms (leave blank for no min):")
-    min_rooms = int(min_rooms) if min_rooms else None
-
-    floor_options = ["topFloor", "intermediateFloor", "groundFloor"]
-    selected_floors = input(
-        "Select the floor types you would consider:",
-        "Floor Types",
-        floor_options
-    )
-    floorHeights = ",".join(selected_floors) if selected_floors else None
-
-    air_conditioning = input(
-        "Do you require air conditioning?",
-        "Air Conditioning",
-        ["Yes", "No"]
-    )
-
-    elevator = input(
-        "Do you require an elevator?",
-        "Elevator",
-        ["Yes", "No"]
-    )
-
-    print("Please wait while we fetch the properties.", "Fetching Properties")
+        return {"error": "No matching locations found for any district"}
 
     rresults = []
     for district, locations in district_results.items():
@@ -125,15 +75,12 @@ def data_retrevial():
             zoiID = location.get("zoiId")
             locationID = location.get("locationId")
 
-            # Use zoiId if available; fallback to locationId if zoiId is missing
             identifier_type = "zoiId" if zoiID else "locationId"
             identifier_value = zoiID or locationID
 
             if not identifier_value:
                 print(f"WARNING: No zoiId or locationId available for location: {location['name']}")
                 continue
-
-            print(f"DEBUG: Fetching properties for district {district} and location {location['name']} ({identifier_type}: {identifier_value})")
 
             query = f"?numPage=1&maxItems=40&sort=asc&locale=en&operation=rent&country={country}&{identifier_type}={identifier_value}"
             if max_price:
@@ -142,11 +89,9 @@ def data_retrevial():
                 query += f"&minPrice={min_price}"
             if min_rooms:
                 query += f"&minRooms={min_rooms}"
-            if floorHeights:
-                query += f"&floorHeights={floorHeights}"
-            if air_conditioning:
-                query += f"&airConditioning=true"
-            if elevator:
+            if floor_types:
+                query += f"&floorHeights={','.join(floor_types)}"
+            if elevator == "yes":
                 query += f"&elevator=true"
 
             properties_data = get_data("/properties/list", query, headers)
@@ -156,7 +101,7 @@ def data_retrevial():
                     rresults.append({
                         "rooms": prop.get("rooms", ""),
                         "locationId": prop.get("locationId", ""),
-                        "multimedia": prop.get("multimedia", ""),
+                        "multimedia": prop.get("multimedia", []),
                         "price": prop.get("price", ""),
                         "status": prop.get("status", ""),
                         "size": prop.get("size", ""),
@@ -166,23 +111,32 @@ def data_retrevial():
                         "district": district
                     })
 
-
     if rresults:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = f"results_{timestamp}.csv"
 
-        fieldnames = [
-            "rooms", "locationId", "multimedia", "price", "status", "size",
-            "address", "bathrooms", "url", "district"
-        ]
+        fieldnames = ["rooms", "locationId", "multimedia", "price", "status", "size",
+                     "address", "bathrooms", "url", "district"]
         with open(output_file, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rresults)
 
-        print(f"Results saved to {output_file}", "Success")
+        # Get the first result's IDs for display
+        first_location = next(iter(district_results.values()))[0]
+        return {
+            "success": True,
+            "results": rresults,
+            "file": output_file,
+            "zoi_id": first_location.get("zoiId", "N/A"),
+            "location_id": first_location.get("locationId", "N/A")
+        }
     else:
-        print("No properties found with the specified criteria.", "No Properties")
+        return {
+            "error": "No properties found with the specified criteria",
+            "zoi_id": "N/A",
+            "location_id": "N/A"
+        }
 
 
 
@@ -220,28 +174,91 @@ def check_new_listings():
     
     return new_listings
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def homepage():
+    if request.method == 'POST':
+        city = request.form.get('city')
+        districts = request.form.get('districts')
+        
+        # First form submission (city and districts)
+        if 'get-city' in request.form:
+            results = data_retrevial(
+                city=city,
+                districts=districts
+            )
+            
+            # Format the location data for the template
+            location_data = {
+                'city': city,
+                'district': districts,
+                'description': f"Search results for {city}",
+                'ZOI': results.get('zoi_id', 'N/A'),
+                'ID': results.get('location_id', 'N/A'),
+                'show_results': True  # Flag to show the results section
+            }
+            return render_template("index.html", **location_data)
+    
+    return render_template("index.html", show_results=False)
 
-    return render_template("index.html")
+@app.route("/result", methods=['GET', 'POST'])
+def result_page():
+    if request.method == 'POST':
+        city = request.form.get('city')
+        districts = request.form.get('districts')
+        max_price = request.form.get('max_price')
+        min_price = request.form.get('min_price')
+        min_rooms = request.form.get('min_rooms')
+        floor_types = request.form.getlist('floor_types')
+        elevator = request.form.get('elevator')
+        
+        results = data_retrevial(
+            city=city,
+            districts=districts,
+            max_price=max_price,
+            min_price=min_price,
+            min_rooms=min_rooms,
+            floor_types=floor_types,
+            elevator=elevator
+        )
+        
+        # Process multimedia data before passing to template
+        processed_results = []
+        for result in results.get('results', []):
+            multimedia = result.get('multimedia', [])
+            # Ensure multimedia is a list and contains valid data
+            if isinstance(multimedia, str):
+                multimedia = [multimedia]
+            elif isinstance(multimedia, dict):
+                multimedia = [multimedia]
+            elif not isinstance(multimedia, list):
+                multimedia = []
+                
+            result['multimedia'] = multimedia
+            processed_results.append(result)
+        
+        return render_template("result.html",
+                             city=city,
+                             results=processed_results,
+                             result_count=len(processed_results))
+    
+    return redirect(url_for('homepage'))
 
-@app.route("/result")
-def result():
 
-    return render_template("result.html")
 
-# @app.route("/get-house", method="POST")
-# def get_house():
-#     data = requests.get("index.html")
-#     # to do get input from html page
-#     # fit data into data retrevial function 
-#     # post_data = data_retrevial(city,rooms,min_price,max_price)
-#     # retrun jsonify(post_data)
-#     pass
 
-# @app.route( "/results" , method="POST" )
-# def show_results():
-#     pass
+@app.route("/submit-preferences", methods=['POST'])
+def submit_preferences():
+    # Handle the second form submission (preferences)
+    max_price = request.form.get('max_price')
+    min_price = request.form.get('min_price')
+    min_rooms = request.form.get('min_rooms')
+    floor_types = request.form.getlist('floor_types')  # Gets multiple checkbox values
+    elevator = request.form.get('elevator')
+    
+    # Process the preferences and search for properties
+    # You'll need to integrate this with your existing property search logic
+    
+    return redirect(url_for('result'))
 
 @app.route("/api/properties")
 def get_properties():

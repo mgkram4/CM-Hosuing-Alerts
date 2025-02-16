@@ -4,26 +4,47 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title></title>
+        <title>Results</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
+        <link rel="stylesheet" href="/static/style.css">
     </head>
     <body>
+        <div class="result-page">
+            <div class="header">
+                <h1>Results from {{ city }}</h1>
+                <p>Number of Results: {{ result_count }}</p>
+                <div class="button">
+                    <a href="/" class="home-button">Go Back</a>
+                </div>
+            </div>
+       
+            <div class="grid-results">
+                {% for result in results %}
+                <div class="card">
+                    <div class="tags">
+                        <p class="tag">{{ result.district }}</p>
+                        <p class="tag">{{ result.address }}</p>
+                        <p class="tag">{{ result.status }}</p>
+                    </div>
+                    {% if result.multimedia and result.multimedia|length > 0 and result.multimedia[0] is mapping and result.multimedia[0].url %}
+                        <img class="image" src="{{ result.multimedia[0].url }}" height="200" width="200" alt="Property Image"/>
+                    {% elif result.multimedia and result.multimedia|length > 0 and result.multimedia[0] is string %}
+                        <img class="image" src="{{ result.multimedia[0] }}" height="200" width="200" alt="Property Image"/>
+                    {% else %}
+                        <img class="image" src="/static/default-property.jpg" height="200" width="200" alt="No Image Available"/>
+                    {% endif %}
+                    <div class="tags">
+                        <p class="tag">{{ result.rooms }} rooms</p>
+                        <p class="tag">€{{ result.price }}</p>
+                        <p class="tag">{{ result.size }}m²</p>
+                        <p class="tag">{{ result.bathrooms }} bathrooms</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
 
-        <p>rooms</p>
-        <p> Location ID</p>
-        <p> multi media</p>
-        <p> price </p>
-        <p>rooms</p>
-        <p> status</p>
-        <p> size</p>
-        <p> address </p>
-        <p> bathrooms</p>
-        <p> url</p>
-        <p> address </p>
-        <p>district</p>
 
-        
     </body>
 </html>

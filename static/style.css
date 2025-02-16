@@ -1,17 +1,30 @@
+*{
+    font-family:Arial, Helvetica, sans-serif
+}
+
+body{
+    background-color: rgb(238, 238, 238);
+}
+
 .header {
     display: flex;
     flex-direction: column;
     text-align: center;
-    background-color: lime;
+    background-color: rgb(207, 207, 207);
+    border: 2px solid black;
     border-radius: 20px;
     margin: 20px;
+    height: 200px;
+
+    
 }
 
 .first-input{
     display: flex;
     flex-direction: column;
     text-align: center;
-    background-color: lime;
+    background-color: rgb(207, 207, 207);
+    border: 2px solid black;
     border-radius: 20px;
     margin: 20px;
 }
@@ -20,7 +33,8 @@
     display: flex;
     flex-direction: column;
     text-align: center;
-    background-color: red;
+    background-color: rgb(0, 159, 69);
+    border: solid 2px black;
     border-radius: 20px;
     margin: 20px;
 }
@@ -30,7 +44,8 @@
     display: flex;
     flex-direction: column;
     text-align: center;
-    background-color: lime;
+    background-color: rgb(207, 207, 207);
+    border: 2px solid black;
     border-radius: 20px;
     margin: 20px;
 }
@@ -39,7 +54,8 @@
     display: flex;
     flex-direction: column;
     text-align: center;
-    background-color: lime;
+    background-color: rgb(207, 207, 207);
+    border: 2px solid black;
     border-radius: 20px;
     margin: 20px;
 }
@@ -48,13 +64,14 @@
     display: flex;
     flex-direction: column;
     text-align: center;
-    background-color: lime;
+    background-color: rgb(207, 207, 207);
+    border: 2px solid black;
     border-radius: 20px;
     margin: 20px;
 }
 
 .btn {
-    background-color: red;
+    background-color: rgb(10, 198, 82);
     flex: content;
     justify-content: center;
     padding: 4px;
@@ -67,4 +84,63 @@ input {
     padding: 4px;
     margin: 8px;
     border-radius: 20px;
+}
+
+
+.card {
+    flex-direction: row;
+    padding: 8px;
+    border: 2px solid;
+    border-color: black;
+    border-radius: 4px;
+    margin: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(207, 207, 207);
+}
+
+.tags {
+
+
+    gap: 2px;
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    grid-template-rows: repeat(2,auto);
+
+
+}
+
+.tag{
+    padding: 2px;
+    border-radius: 4px;
+    border: 2px solid;
+    border-color: rgb(131, 131, 131);
+}
+
+.image{
+    margin: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.grid-results {
+    margin: 20px;
+    gap: 2px;
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    grid-template-rows: repeat(2,auto);
+}
+
+.home-button {
+    color: black;
+    background: whitesmoke;
+    border: gray solid 1px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    width: 80px;
+
 }
